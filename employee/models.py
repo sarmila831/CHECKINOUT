@@ -58,3 +58,22 @@ class UserAttendanceSerializer(serializers.ModelSerializer):
             BreakTime.objects.create(**break_data)
 
         return user_attendance
+     def update(self, instance, validated_data):
+        # Update the fields in the UserAttendance instance
+        breaks_data = validated_data.pop('breaks', None)
+        
+        # Update the main attendance fields (check_in_time, check_out_time)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+
+        # Now handle the 'breaks' field (add new breaks or update existing ones)
+        if breaks_data is not None:
+            # First, update  existing breaks 
+            instance.breaks.all().update()  # update all old breaks
+            for break_data in breaks_data:
+                break_data['attendance'] = instance  # Link the break to this attendance record
+                BreakTime.objects.create(**break_data)
+
+        return instance
