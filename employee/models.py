@@ -45,3 +45,16 @@ class UserAttendanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAttendance
         fields = ['id', 'user', 'check_in_time', 'check_out_time','breaks'  ,'worked_hours']
+    def create(self, validated_data):
+        # Extract break data from validated_data
+        breaks_data = validated_data.pop('breaks', [])
+
+        # Create the UserAttendance instance
+        user_attendance = UserAttendance.objects.create(**validated_data)
+
+        # Create associated BreakTime instances (if any)
+        for break_data in breaks_data:
+            break_data['attendance'] = user_attendance  # Associate each break with the user_attendance
+            BreakTime.objects.create(**break_data)
+
+        return user_attendance
